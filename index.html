@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>projet 1web</title>
+	<meta charset="utf-8">
+
+	<style type="text/css">
+		#content{
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div id="content">
+		<h1>Jeu Memory</h1>
+
+		<p>
+			Choisissez le dos de carte que vous voulez : 
+		</p>
+		<br><br>
+		
+		<label for="carte1"><img src="carte1.png" width="100" height="100"></label>
+		<input type="radio" id="carte1" name="cartes" value="carte1" checked="checked">
+		
+		<label for="carte2"><img src="carte2.png" width="100" height="100"></label>
+		<input type="radio" id="carte2" name="cartes" value="carte2"><br>
+
+		<br><br>
+		
+		<label for="easymode">Mode facile (2/3) : </label>
+		<input type="radio" id="easymode" name="mode" value="easy" checked="checked">
+
+		<label for="difficultmode">Mode difficile (4/6) : </label>
+		<input type="radio" id="difficultmode" name="mode" value="difficult">
+
+		<br>
+		<br>
+
+		<button onclick="start()">Lancer la partie !</button><br>
+		<button onclick="reset()">Reset</button>
+
+		<br>
+		<br>
+
+		<div class="stopwatch">
+            <div class="display">
+                <span class="minutes">00</span>' <span class="seconds">00</span>' <span class="centiseconds">00</span>
+            </div>
+        </div>
+        
+		<div id="plateau">
+
+		</div>
+	</div>
+	<script src="stopwatch.js"></script>
+	<script type="text/javascript">
+		console.log(localStorage)
+		var level = localStorage.getItem("level")
+		var carte = localStorage.getItem("carte")
+		var plateau = document.getElementById("plateau")
+		var htmlAdd = ""
+
+		var tableauVerification = []
+		var tableauVerifID = []
+		var nbCoups = 0
+		var aTrouve = false
+		var tentatives = 1
+
+		if(level != null && carte != null){
+			if(level == "easy"){
+				var tableForRandom = ['img1', 'img1', 'img2', 'img2', 'img3', 'img3']
+				shuffle(tableForRandom) //melange
+				
+				for(i = 0; i < tableForRandom.length; i++){
+					htmlAdd += "<img class='img' src='"+carte+".png' width='100' height='100' id='"+i+"' title='"+tableForRandom[i]+"' onclick='showImg(\""+tableForRandom[i]+"\", "+i+")'>"
+					if(i%2!=0)
+						htmlAdd += "<br>"
+				}
+			}else{
+				var tableauImg = ['img1', 'img2', 'img3', 'img4', 'img5', 'img6', 'img7', 'img8', 'img9', 'img10', 'img11', 'img12']
+				var tableForRandom = []
+				for(i = 0; i < tableauImg.length; i++){//ajout des doublons
+					tableForRandom.push(tableauImg[i])
+					tableForRandom.push(tableauImg[i])
+				}
+				shuffle(tableForRandom) //melange
+				
+				var cpt = 0//compteur pour retour a la ligne
+				for(i = 0; i < tableForRandom.length; i++){
+					htmlAdd += "<img class='img' src='"+carte+".png' width='100' height='100' id='"+i+"' title='"+tableForRandom[i]+"' onclick='showImg(\""+tableForRandom[i]+"\", "+i+")'>"
+					
+					if(cpt == 3){
+						cpt=0
+						htmlAdd += "<br>"
+					}else{
+						cpt+=1
+					}
+				}
+			}
+			plateau.innerHTML = htmlAdd
+		}
+
+
+		function showImg(img, id){
+			startTimer()
+			nbCoups++;
+
+			if(nbCoups == 1){
+				document.getElementById(id).src = "images/"+img+".png";
+				tableauVerification.push(img)
+				tableauVerifID.push(id)
+			}else if(nbCoups == 2){
+				document.getElementById(id).src = "images/"+img+".png";
+				tableauVerification.push(img)
+				tableauVerifID.push(id)
+			}
+
+			if(tableauVerification.length == 2){
+				if(tableauVerification[0]==tableauVerification[1]){
+					alert("bravo tu trouvé une paire")
+
+					//enleve les cartes trouvées
+					for(i=0; i<tableauVerifID.length; i++){
+						document.getElementById(tableauVerifID[i]).remove()
+					}
+
+					//re initialise
+					tableauVerifID = []
+					tableauVerification = []
+
+					nbCoups = 0
+				}else{
+					alert("faux, re essaye")
+					//remets de dos les cartes
+					var elements = document.getElementsByClassName("img").length
+					for(i = 0; i < elements; i++){
+						document.getElementsByClassName("img")[i].src = carte+".png";
+					}
+					//re initialise le tableau
+					tableauVerification = []
+					tableauVerifID = []
+					//remets le nb de coups a 0
+					nbCoups = 0
+				}
+				//mouvements
+				tentatives+=1
+			}
+			isFinished()//verifie si la partie est finie
+			console.log(tableauVerification)
+			console.log(nbCoups)
+		}
+
+		function start(){
+			localStorage.clear()
+			var estChoche = document.getElementById('carte1').checked;
+			var estChocheLevel = document.getElementById('easymode').checked;
+
+			//type de carte
+			if (estChoche) {
+				var carte = document.getElementById("carte1").value;
+				localStorage.setItem('carte', carte);
+			}else{
+				var carte = document.getElementById("carte2").value;
+				localStorage.setItem('carte', carte);
+			}
+
+			//niveau
+			if(estChocheLevel){
+				var level = document.getElementById("easymode").value;
+				localStorage.setItem('level', level);
+			}else{
+				var level = document.getElementById("difficultmode").value;
+				localStorage.setItem('level', level);
+			}
+			
+			location.reload()
+		}
+
+		function reset(){
+			localStorage.clear()
+			location.reload()
+		}
+
+		//fonction pour melanger le tableau
+		function shuffle(array) {
+  			array.sort(() => Math.random() - 0.5);
+		}
+
+		function isFinished(){
+			var elements = document.getElementsByClassName("img").length
+			if(elements == 0){
+				stopTimer()
+				var plateau = document.getElementById("plateau")
+				plateau.innerHTML = "Bravo vous avez fini cette partie avec " +tentatives+ " mouvements"
+			}
+		}
+	</script>
+
+</body>
+</html>
